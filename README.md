@@ -86,13 +86,36 @@ Ez a platform automatikusan gyűjti és elemzi a magyar munkaerőpiacon elérhet
 
 ## 🚀 Telepítés és Futtatás
 
-### Előfeltételek
-- Python 3.10+
-- Node.js 18+
-- PostgreSQL 14+
-- Docker (opcionális)
+### ☁️ Számítógép Nélküli Deploy (AJÁNLOTT)
 
-### Backend indítása
+**15 perc alatt élesben Railway.app-on:**
+
+👉 **[DEPLOY_MOST_EGYSZERUBB.md](DEPLOY_MOST_EGYSZERUBB.md)** - Lépésről lépésre útmutató
+
+**Előnyök:**
+- ✅ Teljesen ingyenes kezdéshez
+- ✅ Nincs helyi telepítés szükséges
+- ✅ Automatikus HTTPS
+- ✅ Automatikus deploy (git push = éles)
+
+**Más platformok:**
+- 📘 [Teljes Cloud Deployment Útmutató](docs/CLOUD_DEPLOYMENT.md)
+- Railway, Render, Vercel, Google Cloud Run, stb.
+
+---
+
+### 💻 Helyi Telepítés
+
+#### Docker (Ajánlott)
+```bash
+cp .env.example .env
+# Szerkeszd a .env fájlt!
+docker-compose up -d
+```
+
+#### Manuális
+
+**Backend:**
 ```bash
 cd backend
 python -m venv venv
@@ -101,17 +124,14 @@ pip install -r requirements.txt
 uvicorn main:app --reload
 ```
 
-### Frontend indítása
+**Frontend:**
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-### Docker indítás
-```bash
-docker-compose up -d
-```
+**Részletek:** [QUICKSTART.md](QUICKSTART.md)
 
 ## 🔧 Konfiguráció
 
