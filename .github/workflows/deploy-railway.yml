@@ -18,11 +18,13 @@ jobs:
       
       - name: Deploy Backend
         run: railway up --service backend
+        working-directory: ./backend
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
       
       - name: Deploy Scraper
         run: railway up --service scraper
+        working-directory: ./scraper
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
       
