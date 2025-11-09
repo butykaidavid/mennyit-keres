@@ -73,6 +73,31 @@ class Settings(BaseSettings):
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: int = 5432
     
+    @field_validator('DATABASE_URL', mode='before')
+    @classmethod
+    def validate_database_url(cls, v: str) -> str:
+        """
+        Validate DATABASE_URL is not empty and has proper format.
+        If empty or invalid, construct from individual components or use default.
+        """
+        # If DATABASE_URL is empty or None, return the default
+        if not v or (isinstance(v, str) and v.strip() == ""):
+            return "postgresql://admin:password@localhost:5432/fizetesek"
+        
+        # Validate basic URL format
+        if isinstance(v, str) and v.strip():
+            v = v.strip()
+            # Check if it looks like a valid database URL
+            if not any(v.startswith(prefix) for prefix in ['postgresql://', 'postgres://', 'sqlite://', 'mysql://']):
+                raise ValueError(
+                    f"Invalid DATABASE_URL format: '{v}'. "
+                    "Expected format: postgresql://user:password@host:port/database"
+                )
+            return v
+        
+        # Fallback to default
+        return "postgresql://admin:password@localhost:5432/fizetesek"
+    
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"
     REDIS_HOST: str = "localhost"
