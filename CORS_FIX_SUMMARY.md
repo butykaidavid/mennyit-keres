@@ -17,16 +17,20 @@ This error occurred when the `CORS_ORIGINS` environment variable was:
 
 ## Root Cause
 
-The `CORS_ORIGINS` field in `backend/app/config/settings.py` was defined as `List[str]`, and pydantic-settings attempts to parse list types from environment variables as JSON. When the environment variable was empty or not valid JSON, the parsing would fail.
+The `CORS_ORIGINS` field in `backend/app/config/settings.py` was defined as `List[str]`, and pydantic-settings attempts to parse list types from environment variables as JSON **before** custom validators run. When the environment variable contained a string value (even from docker-compose defaults), pydantic would try to parse it as JSON and fail before the `field_validator` could handle the conversion.
+
+The key issue was the **type annotation**: using `List[str]` told pydantic-settings to expect a JSON array, causing it to reject plain string values. The validator alone wasn't enough - the type annotation needed to accept both strings and lists.
 
 ## Solution
 
-Added a custom `field_validator` to handle multiple input formats gracefully:
+The fix involved two changes:
 
-1. **JSON array format**: `["http://localhost:3000","http://localhost:8000"]`
-2. **Comma-separated format**: `http://localhost:3000,http://localhost:8000`
-3. **Single URL**: `http://localhost:3000`
-4. **Empty or unset**: Falls back to default values
+1. **Changed the type annotation** from `List[str]` to `Union[str, List[str]]` to allow pydantic-settings to accept string input without forcing JSON parsing
+2. **Added a custom `field_validator`** to handle multiple input formats gracefully:
+   - **JSON array format**: `["http://localhost:3000","http://localhost:8000"]`
+   - **Comma-separated format**: `http://localhost:3000,http://localhost:8000`
+   - **Single URL**: `http://localhost:3000`
+   - **Empty or unset**: Falls back to default values
 
 ## Changes Made
 
@@ -35,7 +39,17 @@ Added a custom `field_validator` to handle multiple input formats gracefully:
 Added imports:
 ```python
 from pydantic import field_validator, ValidationInfo
+from typing import List, Union
 import json
+```
+
+**Changed the field type annotation:**
+```python
+# Before:
+CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:8000"]
+
+# After:
+CORS_ORIGINS: Union[str, List[str]] = ["http://localhost:3000", "http://localhost:8000"]
 ```
 
 Added custom validator:
@@ -107,13 +121,14 @@ CORS_ORIGINS=["http://localhost:3000","http://localhost:8000"]
 
 All test cases pass successfully:
 
-- ✓ Empty string → Returns default
-- ✓ JSON array → Parsed correctly
-- ✓ Comma-separated → Parsed correctly  
-- ✓ Single URL → Parsed correctly
+- ✓ Empty string → Returns default `["http://localhost:3000", "http://localhost:8000"]`
+- ✓ JSON array → Parsed correctly `["https://example.com","https://app.example.com"]`
+- ✓ Comma-separated → Parsed correctly `https://example.com,https://app.example.com`
+- ✓ Single URL → Parsed correctly `https://example.com`
 - ✓ Python list → Returned as-is
-- ✓ Whitespace → Returns default
-- ✓ Comma-separated with spaces → Parsed correctly
+- ✓ Whitespace → Returns default `["http://localhost:3000", "http://localhost:8000"]`
+- ✓ Comma-separated with spaces → Parsed correctly `https://example.com , https://app.example.com`
+- ✓ Application startup → No errors, server starts successfully
 
 ## Benefits
 
