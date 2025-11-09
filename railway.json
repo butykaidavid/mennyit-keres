@@ -9,5 +9,56 @@
     "startCommand": "uvicorn main:app --host 0.0.0.0 --port $PORT",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
+  },
+  "environments": {
+    "production": {
+      "variables": {
+        "APP_NAME": "Fizetesi_Info_Platform",
+        "APP_ENV": "production",
+        "DEBUG": "False",
+        "SECRET_KEY": "generate-secure-key-here-use-openssl-rand-hex-32",
+        "API_HOST": "0.0.0.0",
+        "API_PORT": "8000",
+        "API_PREFIX": "/api",
+        "CORS_ORIGINS": "[\"https://your-frontend-domain.vercel.app\",\"https://your-backend.railway.app\"]",
+        "JWT_SECRET_KEY": "generate-jwt-key-here-use-openssl-rand-hex-32",
+        "JWT_ALGORITHM": "HS256",
+        "ACCESS_TOKEN_EXPIRE_MINUTES": "30",
+        "REFRESH_TOKEN_EXPIRE_DAYS": "7",
+        "OPENAI_MODEL": "gpt-3.5-turbo",
+        "OPENAI_MAX_TOKENS": "2000",
+        "OPENAI_TEMPERATURE": "0.7",
+        "SCRAPE_INTERVAL": "3600",
+        "MAX_PAGES_PER_SITE": "10",
+        "REQUEST_DELAY_MIN": "1",
+        "REQUEST_DELAY_MAX": "3",
+        "USER_AGENT": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "USE_PROXY": "False",
+        "RATE_LIMIT_PER_MINUTE": "60",
+        "RATE_LIMIT_PER_HOUR": "1000",
+        "CELERY_TASK_SERIALIZER": "json",
+        "CELERY_RESULT_SERIALIZER": "json",
+        "CELERY_TIMEZONE": "Europe/Budapest",
+        "ENABLE_SENTRY": "False",
+        "LOG_LEVEL": "INFO",
+        "LOG_FILE": "app.log"
+      },
+      "serviceVariables": {
+        "DATABASE_URL": "${{Postgres.DATABASE_URL}}",
+        "POSTGRES_USER": "${{Postgres.PGUSER}}",
+        "POSTGRES_PASSWORD": "${{Postgres.PGPASSWORD}}",
+        "POSTGRES_DB": "${{Postgres.PGDATABASE}}",
+        "POSTGRES_HOST": "${{Postgres.PGHOST}}",
+        "POSTGRES_PORT": "${{Postgres.PGPORT}}",
+        "REDIS_URL": "${{Redis.REDIS_URL}}",
+        "REDIS_HOST": "${{Redis.REDIS_HOST}}",
+        "REDIS_PORT": "${{Redis.REDIS_PORT}}",
+        "CELERY_BROKER_URL": "${{Redis.REDIS_URL}}",
+        "CELERY_RESULT_BACKEND": "${{Redis.REDIS_URL}}"
+      },
+      "secretVariables": {
+        "OPENAI_API_KEY": "your-openai-api-key-set-in-railway-dashboard"
+      }
+    }
   }
 }
