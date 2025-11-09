@@ -4,8 +4,10 @@ Pydantic Settings használatával környezeti változók kezelése
 """
 
 from pydantic_settings import BaseSettings
-from typing import List
+from pydantic import field_validator, ValidationInfo
+from typing import List, Union
 import os
+import json
 
 
 class Settings(BaseSettings):
@@ -22,6 +24,46 @@ class Settings(BaseSettings):
     API_PORT: int = 8000
     API_PREFIX: str = "/api"
     CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:8000"]
+    
+    @field_validator('CORS_ORIGINS', mode='before')
+    @classmethod
+    def parse_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
+        """
+        Parse CORS_ORIGINS from various input formats:
+        - JSON array string: '["http://localhost:3000","http://localhost:8000"]'
+        - Comma-separated string: 'http://localhost:3000,http://localhost:8000'
+        - Python list: ["http://localhost:3000", "http://localhost:8000"]
+        - Empty string: '' (returns default)
+        """
+        # If already a list, return it
+        if isinstance(v, list):
+            return v
+        
+        # If empty or None, return default
+        if not v or v.strip() == "":
+            return ["http://localhost:3000", "http://localhost:8000"]
+        
+        # Try parsing as JSON
+        if isinstance(v, str):
+            v = v.strip()
+            # Check if it looks like JSON
+            if v.startswith('[') and v.endswith(']'):
+                try:
+                    parsed = json.loads(v)
+                    if isinstance(parsed, list):
+                        return parsed
+                except json.JSONDecodeError:
+                    pass
+            
+            # Try comma-separated format
+            if ',' in v:
+                return [origin.strip() for origin in v.split(',') if origin.strip()]
+            
+            # Single URL
+            return [v]
+        
+        # Fallback to default
+        return ["http://localhost:3000", "http://localhost:8000"]
     
     # Database
     DATABASE_URL: str = "postgresql://admin:password@localhost:5432/fizetesek"
